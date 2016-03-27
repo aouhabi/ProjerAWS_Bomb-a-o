@@ -4,7 +4,8 @@ Tous les fichiers necessaire à l'execution sont dans :  bomber
 
 
 ## Base de donnée
-#### Tout d'abords on doit lancé phpmyadmin et creer la base de donnée qui se trouve dans le fichier bdd.txt .
+#### Tout d'abords on doit lancé phpmyadmin et creer la base de donnée
+qui se trouve dans le fichier bdd.txt .
         phpmyadmin-ctl install
          
 en suite on install les dependences 
