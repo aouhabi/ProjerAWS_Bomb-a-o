@@ -25,7 +25,8 @@
         "regex": "~0.1.1",
         "password-hash": "~1.2.2",
         "html-escape": "~1.0.2",
-        "querystring": "~0.2"
+        "querystring": "~0.2",
+        "socket.io": "~1.4.5"
        
     },
     "engines": {
