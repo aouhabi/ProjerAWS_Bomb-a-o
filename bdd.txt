@@ -1,0 +1,9 @@
+create table user (
+    id int(10)   NOT NULL AUTO_INCREMENT ,
+    nom varchar(255),
+    prevom varchar(255),
+    email varchar(255),
+    pass varchar(255),
+    partie_jouer int(10) default 0 ,
+    partie_gagner int(10) default 0 ,
+     primary key(id) );
