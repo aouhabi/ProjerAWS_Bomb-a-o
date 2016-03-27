@@ -10,7 +10,6 @@ var passwordHash = require('password-hash');
 var app = express();
 var twig = require("twig");
 var session = require('express-session');
-var md5 = require('md5');
 var escapee=require("html-escape");
 
 
