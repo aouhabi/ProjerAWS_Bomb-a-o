@@ -1,0 +1,74 @@
+<!DOCTYPE html>  
+
+<html>
+  <head>
+    <title>Bomb'a'O</title>
+    <meta charset="utf-8">
+      {% block stylesheets %}
+                                {# On charge le CSS de bootstrap depuis le site directement #}
+      <link rel="stylesheet" href="/css/index.css">
+      
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+  
+                                                <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+  
+                                        <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+   
+   
+    {% endblock %}
+
+    <title>Login</title>
+  </head>
+
+  <body>
+<nav class="navbar navbar-inverse">
+               <div class="container-fluid">
+               <div class="navbar-header">
+                  
+      <a class="navbar-brand" ><p></p></a>
+              </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+          
+                </div>
+              </div>
+        </nav>
+
+
+<div class="login">
+  <div class="heading">
+    <h2>Sign in</h2>
+    {%  if  email_non_exst   %}
+    <p class="erreur" > cette email n'existe pas</p>
+    {%  endif %}
+     {%  if   email_pass_incrct   %}
+    <p class="erreur" >combinaison email/password incorrect !</p>
+    {%  endif %}
+   
+    <form action="" method="post">
+
+      <div class="input-group input-group-lg">
+        <span class="input-group-addon"><i class="fa fa-user"></i></span>
+        <input type="text" class="form-control" placeholder="E-mail" name="email" required="" pattern="[^@]+@[^@]+\.[a-zA-Z]{2,}">
+          </div>
+          <br>
+
+        <div class="input-group input-group-lg">
+          <span class="input-group-addon"><i class="fa fa-lock"></i></span>
+          <input type="password" class="form-control" placeholder="Password" name="pass" required="" pattern="[a-zA-Z0-9]{6,16}">
+        </div>
+        <br>
+
+
+        <button type="submit" class="btn btn-primary pull-right">Login</button>
+       </form>
+       <a href="/inscription" class="btn btn-lg pull-left">Inscription ?</a>
+    </div>
+ </div>
+
+{{ email_incorect }}
+  </body>	
+  
+
+</html>

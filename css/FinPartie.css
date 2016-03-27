@@ -1,0 +1,21 @@
+h1 {
+    font-size: 250%;
+    text-align: center;
+    color: #87CEFA;
+}
+h2 {
+     font-size: 160%;
+     text-align: center;
+     
+  }
+
+h3{
+    text-align: center;
+}
+
+#backk{
+    position: absolute;
+    margin-top: -11px;
+    background-color: black;
+}
+

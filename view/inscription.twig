@@ -1,0 +1,137 @@
+<!DOCTYPE html>  
+
+<html>
+<head>
+     <title>Bomb'a'O</title>
+    <meta http-equiv="Content-Type" content="text/html" meta charset="UTF-8" />
+    
+{% block stylesheets %}
+                        {# On charge le CSS de bootstrap depuis le site directement #}
+    <link rel="stylesheet" href="../css/inscription.css">
+                                <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+                                <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+                                    <!-- Latest compiled and minified JavaScript -->
+        <style type="text/css"></style>  
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+{% endblock %}
+    
+    
+</head>
+
+<body class="container">
+        <nav class="navbar navbar-inverse">
+                   <div class="container-fluid">
+                   <div class="navbar-header">
+                       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>                        
+                      </button>
+        
+                   </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+              
+                        <ul class="nav navbar-nav navbar-left">
+                          <li><a href="/"><span class="glyphicon glyphicon-circle-arrow-left"></span>back</a></li> 
+                        </ul>
+                    </div>
+              </div>
+        </nav>
+    
+    
+    <div class='page-header' id="tx" >
+    <h2>Formulaire d'inscription</h2>
+    </div>
+       {%  if  email_exst   %}
+        <p class="erreur" > Cet E-mail existe déja! veuillez réesseyer</p>
+        {%  endif %}
+        
+    <div class ="panel panel-info" id="panel">   
+    <form action="/inscription" method="post">
+      <fieldset>
+        <legend id ="lgg"> Information personnelles </legend>
+          
+          <div class="form-group">
+          <label for="nom">Nom <em>*</em></label>
+          <input  class="form-control"  aria-describedby="basic-addon1" id="nom" placeholder="Nom" autofocus="" required="" name="nom" pattern="[a-zA-Z]*[a-zA-Z]">
+            {%  if  nom   %}
+            <span class=erreur_form >format  nom incorrect</span>
+            {%  endif  %}
+          </div>
+          
+           <div class="form-group">
+          <label for="prenom">Prénom <em>*</em></label>
+          <input class="form-control"  aria-describedby="basic-addon1" id="prenom" placeholder="Prenom" autofocus="" required="" name="prenom" pattern="[a-zA-Z]*[a-zA-Z]">
+            {%  if  prenom   %}
+            <span class=erreur_form >format  prenom incorrect</span>
+            {%  endif  %}
+         
+          </div>
+        
+        <div class="form-group">
+          <label for="email">Email <em>*</em></label>
+          <input class="form-control"  aria-describedby="basic-addon1" id="email" type="email" placeholder="prenom.nom@html.edu" required pattern="[^@]+@[^@]+\.[a-zA-Z]{2,}" name="email"> {#[a-zA-Z]*.[a-zA-Z]*@[a-zA-Z]*[a-zA-Z].[a-zA-Z]*[a-zA-Z].[a-zA-Z]*[a-zA-Z]#}
+           {%  if  email   %}
+             <span class=erreur_form >format  email incorrect</span>
+            {%  endif  %}
+         
+          
+          </div>
+          
+          <div class="form-group">
+          <label for="passeword">Passeword<em>*</em></label>
+          <input class="form-control"  aria-describedby="basic-addon1" id="pass" type="password" placeholder="Entre 6 et 16 carecters" required="" pattern="[a-zA-Z0-9]{6,16}" name="pass"><br>
+          
+           {%  if  pass   %}
+            <span class=erreur_form >format  password incorrect</span>
+            {%  endif  %}
+            
+             <label for="passeword">confirm Passeword<em>*</em></label>
+          <input class="form-control"  aria-describedby="basic-addon1" id="conf_pass" type="password" placeholder="Entre 6 et 16 carecters" required="" pattern="[a-zA-Z0-9]{6,16}" name="conf_pass" onblur="verif_pass();">
+          
+          {%  if  conf_pass   %}
+            <span class=erreur_form >les mot de pass sonr different </span>
+            {%  endif  %}
+        
+         </div>
+        
+      </fieldset>
+     
+      <div id="cnfrm2">
+          <input type="submit" value="confirmation" class="btn btn-primary pull-right">
+             </div>    
+    </form>
+    <br>
+    
+   
+    </div>
+    <br><br>
+    </body>
+
+<script type="text/javascript">
+
+function verif_pass()
+{
+    var pass1 = document.getElementById('pass');
+    var pass2 = document.getElementById('conf_pass');
+   
+    var goodColor = "#66cc66";
+    var badColor = "#ff6666";
+    //Compare the values in the password field 
+    //and the confirmation field
+    if(pass1.value != pass2.value){
+     
+        pass2.style.backgroundColor = badColor;
+        message.style.color = 'red';
+        
+   
+    }
+}  
+
+ </script>
+</html>

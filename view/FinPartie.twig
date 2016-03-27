@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head> 
+        
+     <title>Bomb'a'O</title>
+    <meta http-equiv="Content-Type" content="text/html" meta charset="UTF-8" />
+    
+{% block stylesheets %}
+                        {# On charge le CSS de bootstrap depuis le site directement #}
+    <link rel="stylesheet" href="../css/FinPartie.css">
+                                <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+                                <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+                                    <!-- Latest compiled and minified JavaScript -->
+        <style type="text/css"></style>  
+
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+{% endblock %}
+    
+    
+</head>
+        
+
+  <body class='container'>
+      <nav class="navbar navbar-inverse">
+                   <div class="container-fluid">
+                   <div class="navbar-header">
+                       <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar"></button>
+        
+                   </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+                        <ul class="nav navbar-nav navbar-right">
+                             <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-left">
+                          <br>
+                          <li><form action="/menu" method="post">
+                            <div id="backk">
+                            <input type="hidden"  name="etat"  value="true">
+                            <input  class="btn btn-info-left" type="submit" value="Précedent">
+                            </div>
+                            </form>
+                            </li>
+                        </ul>
+                    </div>
+              </div>
+        </nav>
+        <br>
+        
+        
+       <p><h1> Bravo ! {{ vainqueur }}  </h1></p><br>
+            <div id="tab">  
+    <table class="table table-hover ">
+       <thead class="thead-inverse">
+            <tr>
+            <th> <h2>Perdant</h2> </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><h3>{{ joueur1 }}</h3></td>         {# affiche le nom  #}
+          </tr>
+            {% if not joueur2 is empty  %}  {# parcour le tableau de joueur qu'on lui donne  #}
+              <tr >
+                <td><h3>{{ joueur2 }}</h3></td>         {# affiche le nom  #}
+              </tr>
+            {% endif  %}
+            {% if not joueur3 is empty  %}  {# parcour le tableau de joueur qu'on lui donne  #}
+              <tr >
+                <td><h3>{{ joueur3 }}</h3></td>         {# affiche le nom  #}
+              </tr>
+            {% endif  %}
+            
+        </tbody>
+   
+      </table>
+      </div>
+  </body>        
+
+</html>

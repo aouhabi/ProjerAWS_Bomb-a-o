@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+    <head> 
+        <title>Bomb'a'O</title>
+        
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta http-equiv="Content-Type" content="text/html" meta charset="UTF-8" />
+    
+    
+    {% block stylesheets %}
+                                     {# On charge le CSS de bootstrap depuis le site directement #}
+                                     
+    <link rel="stylesheet" href="css/menu.css">
+   
+                                            <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+                                                        <!-- Optional theme -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+                                            <!-- Latest compiled and minified JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+  
+      {% endblock %}
+        
+  
+    </head>
+    
+        <nav class="navbar navbar-inverse">
+               <div class="container-fluid">
+                  <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>                        
+                    </button>
+                       <a class="navbar-brand" ><p> Bonjour {{ joueur }}</p></a>
+                  </div>
+                  <div class="collapse navbar-collapse" id="myNavbar">
+                        <ul class="nav navbar-nav navbar-right">
+                             <li><a href="/logout"><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                             <li><a href="/stats"><span class="glyphicon glyphicon-star-empty"></span> Classement</a></li>
+                        </ul>
+                  </div>
+             </div>
+        </nav>
+        
+<body class="container" >   
+ <div id="global">
+               <div class="heading" id="cd">     
+                  <div class="list-group" id= "liste" >
+                     <a href="#" class="list-group-item disabled"> <h3>Liste des joueurs connecté </h3></a>
+                    
+                    <input type="submit" value="Lancer Invitation" class="btn btn-primary btn-block" id="inv" >
+                    </div>
+              </div>
+    <div id="boxbox" >
+         <div id="bodyy" >
+              <div id='allchat'>
+              <ul id="msg_begin"> The CHAT </ul>
+               </div>
+               <ul id="messages"> </ul>
+                    <form action="">
+                          <input id="m"  placeholder="Vos Messages ...."  autocomplete="off"/><button class="btn" id="sd">Send</button>
+                    </form>
+         </div>
+    </div>
+ </div>
+    
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+{% if joueur %}
+<script type="text/javascript">
+
+var monId = '{{ id }}';
+
+    $('#inv').click(function(){     // si click sur le bouton invité 
+
+            var lesCheckBox = document.getElementsByClassName("pickPlayer"); // recupere les checkbox
+            var lesJoueursInvites = [];   // tableau des jouer invité 
+            for (var i = 0; i < lesCheckBox.length && lesJoueursInvites.length < 4; i++) //pour toutes les checkbox checké
+            {
+                if (lesCheckBox[i].checked)
+                { 
+                    lesJoueursInvites.push(lesCheckBox[i].value); // si la checkbox coché on la met le jouer dans la liste
+                }
+            }
+            if ( 1 > lesJoueursInvites.length  || lesJoueursInvites.length > 3)// si ils ne sont pas entre un et trois.
+            { 
+                return;     // Afficher un message d'erreur et annuler.
+            }
+            else
+            {
+                 
+                  socket.emit("defi_lancer",{defieur : monId  ,joueurs : lesJoueursInvites}); //envoie de la demande a tous les jouers cochet 
+                }
+               socket.on('btn_disp',function(){
+                   $('#inv').hide();
+               });
+           });
+
+
+   
+       /*************
+        *
+        *  socket de connexion client 
+        *
+        **************/
+ 
+
+
+ {% if etat==true %}
+     var socket = io.connect('', {query: 'mode=0'});
+       socket.on('connect', function(data) { // connection de la socket
+            socket.emit('joueur_c', { // emission du joueur connecté
+                 nom:'{{ joueur }}',   // transmission nom
+                 id : '{{ id }}' ,  // transmission id
+                 partie_jouer : '{{ partie_jouer }}',
+                 partie_gagner : '{{ partie_gagner }}'
+            });
+   
+           
+        socket.on('joueur_connecte',function(j_connecte){   // reception des autres joueurs connecté 
+       
+               if(j_connecte.user.nom != '{{joueur}}') 
+            {
+                var stats = '<div id="stats"><em>Parties jouées :</em>'+j_connecte.user.partie_jouer+' <em>  Victoire:</em>'+j_connecte.user.partie_gagner+' </div>'; //la div des statistiques
+                var y='<div id="div'+j_connecte.user.id+'"><label>Invité?<input type="checkbox" class="pickPlayer" value="'+j_connecte.user.id+'"></label></div>' ;  // div de la check box
+                var x=' est connecté ';
+                var jr='<h5>'+j_connecte.user.nom + x +'</h5>';
+               $('#liste').append('<div  class="list-group-item" id="div'+j_connecte.user.id +'">'+ jr +'<div id="btn_defi'+j_connecte.user.id+'">'+y+'</div>'+stats+'<div id="quest'+j_connecte.user.id+'"> </div><br><br></div>'); // ajout de la div du joueur connecté 
+            
+            }
+               
+                
+            
+          
+        
+    });
+    
+                /****************
+                * 
+                * defier un joueur
+                * 
+                * 
+                *********/
+        
+               /*******
+                * 
+                * quand un joueur reçoit un defi
+                * 
+                * *****/
+      
+      
+    socket.on('defi_recu',function (defi){ // reception d'un defi 
+       var x =defi.defieur;
+       $('#'+x).fadeOut();    
+    
+            // apparition de l'invite 
+    var boutons = '<p id="msg"> vous à lancer un défis, acceptez vous ? </p><input type="submit" value="non" id="btn_non'+defi.defieur+'" class=" btn btn-danger pull-right"><input type="submit" value="oui" id="btn_oui'+defi.defieur+'" class=" btn btn-success pull-right"></div>'; 
+    $('#quest'+defi.defieur).prepend('<p id="msg"> vous à lancer un défis, acceptez-vous ? </p><input type="submit" value="non" id="btn_non'+defi.defieur+'" class=" btn btn-danger pull-right"><input type="submit" value="oui" id="btn_oui'+defi.defieur+'" class=" btn btn-success pull-right"></div>');
+     $('#inv').hide(); // le jouer ne peux plus invité 
+        son("../sound2.mp3"); // appel fonction son()
+            
+        
+            /*****
+            *
+            *   refuser le defi (appuyer sur non)
+            *
+            ******/
+    
+      $('#btn_non'+defi.defieur).click(function(){  // cas non 
+       $('#inv').show();               
+       $('#quest'+defi.defieur).empty();
+             socket.emit('refu_defi',{
+               refu_joueur : defi.defieur,
+               joueurs : listeInvite
+              });
+         });
+      
+            /*****
+            *
+            *   Accepte (appuyer sur oui)
+            *
+            ******/
+      
+      $('#btn_oui'+defi.defieur).click(function(){  // click sur button 'oui'
+        socket.emit('accept_defi',{ // emission au serveur de l'acceptation 
+           accept_joueur : defi.defieur,   // envoie des information nécessaire 
+           num : defi.num ,
+           id : defi.monId
+         });
+      });
+  });
+ 
+  socket.on('defi_lancer',function(data){
+    socket.emit('accept_defi',{
+           accept_joueur : data.defieur,
+           num : data.num ,
+           id : data.defieur
+          });
+  });
+  
+ 
+       
+     
+         /****************
+           * 
+           * Déconnection joueur 
+           * 
+           * 
+           *************/
+       socket.on('disuser',function(j_connecte){  // deconnexion d'un joueur 
+            $('#div'+j_connecte.user.id).remove(); // suppression de la div du joueur de la liste 
+       });
+      socket.on('debut', function(e){  // debu de la partie 
+             document.location.href = e.partie;
+        });
+    });
+ 
+ 
+         /**********
+          * 
+          * 
+          * partie CHAT 
+          * 
+          ***********/
+
+        
+        function son(x) { // fonction qui genere les effets sonors 
+        var audioElement = document.createElement('audio');
+        audioElement.setAttribute('src', x);
+        audioElement.setAttribute('autoplay', 'autoplay');
+        audioElement.load()
+        $.get();
+        audioElement.addEventListener("load", function() {
+        audioElement.play();
+        }, true);};
+  
+  
+     $('form').submit(function(){
+        var tempo =$('#m').val();       //recupere la valeur du message 
+        socket.emit('chat message',tempo); // emission du message au serveur 
+        $('#m').val('');  
+        return false;
+       
+      });
+
+      socket.on('chat_message', function(chat){    // socket de reception du message 
+          
+        $('#messages').append('<li><em id="pseud">'+chat.nom+':</em>'+' '+chat.msg+'</li>'); // nouveau message ajouté dans le chat
+         document.getElementById("boxbox").scrollTop = document.getElementById("boxbox").scrollHeight; // Garde la bar de scroll en bas 
+      });
+      
+      socket.on('chat_son',function(x){  // reception de la sonnerie 
+          if (x.varr){
+              son('sound.mp3');
+          }
+          varr=false;
+      });
+      
+  {% endif  %}
+</script>
+{% endif  %}
+</body>
+</html>

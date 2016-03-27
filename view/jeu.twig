@@ -1,0 +1,608 @@
+ <!DOCTYPE HTML>
+
+<html>
+    <head>
+        <title>Bomb'a'O</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta http-equiv="Content-Type" content="text/html" meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width">
+		<style>
+            #loader {
+              margin : auto;
+              border: 32px solid #e6ffff;
+              border-radius: 50%;
+              border-top: 32px solid #1aa3ff;
+              border-bottom: 32px solid #1aa3ff;
+              width: 240px;
+              height: 240px;
+              -webkit-animation: spin 2s linear infinite;
+              animation: spin 2s linear infinite;
+            }
+            
+            @-webkit-keyframes spin {
+              0% { -webkit-transform: rotate(0deg); }
+              100% { -webkit-transform: rotate(360deg); }
+            }
+            
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            
+            #liste {
+                position : absolute;
+                left : 0;
+                top : 0;
+                z-index : -999;
+                width : 250px;
+                font-size : 20px;
+                border-radius: 10px;
+            }
+            
+            .j1 {
+                background-color : #0039e6 ;
+            }
+            
+            .j2 {
+                background-color : #cc0000 ;
+            }
+            
+            .j3 {
+                background-color : #00cc00 ;
+            }
+            
+            .j4 {
+                background-color : #ff8000 ;
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div style="margin:auto;width:600px;height:600px;position: relative;">
+            <div id="loader"></div>
+            <canvas id="map" width="600" height="600" style="background-color : rgb(255, 217, 179);display:none;position:absolute;overflow:visible;">
+                Votre navigateur ne supporte pas canvas.
+            </canvas>
+        </div>
+        <ul id="liste"></ul>
+        
+         <form id="fin" style="display:none;" action="/FinPartie" method="post">
+            <input name="vainqueur" type="text" id="vainqueur" value=""></input>
+            <input name="joueur1" type="text" id="joueur1" value=""></input>
+            <input name="joueur2" type="text" id="joueur2" value=""></input>
+            <input name="joueur3" type="text" id="joueur3" value=""></input>
+        </form>
+        
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+        <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+        <script>
+            window.onload = function(){
+                //Variables
+                var monNumJoueur = -1; //Numero du joueur dans la partie
+                var monLogin = "{{login}}";
+                var monID = "{{idJoueur}}";
+                
+                var monNumPartie = "{{idPartie}}"; // le numero de la partie en cours.
+                var lesJoueurs = null; //La liste des joueurs de la partie.
+                var murs = null; // La liste des murs destructibles de la partie.
+                var lesBonus = []; //la liste des bonus non ramassés de la partie.
+               
+                var socket = io.connect('', {query: 'mode=1'}); //La socket du joueur
+                
+                var canvas = document.getElementById("map"); //Le canvas pour l'affichage du jeu
+                
+            
+                if(!canvas)
+                {
+                    alert("Impossible de récupérer le canvas");
+                }
+    
+                var context = canvas.getContext("2d"); //Pour dessiner dans le canvas
+            
+                if(!context)
+                {
+                    alert("Impossible de récupérer le context");
+                }
+                
+                var mapHeight;
+                var mapWidth = 13;
+                var tailleBloc = Math.floor(canvas.width/mapWidth);//Taille de tout les blocs.
+                var diametreBalle = tailleBloc - 8;//Sert pour la taille de la hitbox du personnage, les bombes, et les bonus pour l'instant.
+                
+                var inputList = [0,0,0,0,0];//Le tableau des entrées.
+                //La liste des entrées
+                var espace = 4;
+                var haut = 0;
+                var bas = 1;
+                var gauche = 2;
+                var droite = 3;
+                
+                //La liste des bonus
+                var bombUp = 0;
+                var powerUp = 1;
+                var speedUp = 2;
+                var maxPower = 3;
+                
+                var perso = [];
+                perso[0] = new Image(); 
+                perso[1] = new Image(); 
+                perso[2] = new Image();
+                perso[3] = new Image();
+                var bombe1 = new Image();
+                var bombe2 = new Image();
+                var exp = new Image();
+                var exp2 = new Image();
+                var exp3 = new Image();
+                var mur = new Image(); 
+                var block = new Image();
+                var imgBonus = Array(4);
+                imgBonus[bombUp] = new Image();
+                imgBonus[powerUp] = new Image();
+                imgBonus[speedUp] = new Image();
+                imgBonus[maxPower] = new Image();
+                
+                //Socket et ses handlers
+                
+                socket.on('connect',function(){
+                   socket.emit('partie',{idPartie : monNumPartie});
+                });
+                
+                socket.on('joueur_connecte',function(nP){
+                    monNumJoueur = nP.num;
+                });
+                
+                socket.on('go', function() {
+                    socket.emit('pret');
+                });
+                
+                socket.on('pret', function() {
+                    loadImg();
+                    socket.emit('ok', {nom : monLogin, id : monID });
+                });
+                
+                socket.on('debut', function(p) {
+                    lesJoueurs = p.joueurs;
+                    murs = p.map;
+                    mapHeight = p.height;
+                    canvas.height = tailleBloc * mapHeight + tailleBloc * 2;
+                    canvas.width += tailleBloc * 2 -2;
+                    draw();
+                    canvas.style.display = "block";
+                    document.getElementById("loader").style.display = "none";
+                    document.getElementById("loader").style.WebkitAnimationPlayState = "paused";
+                    document.getElementById("loader").style.animationPlayState = "paused";
+                    for (var i = 0 ; i < lesJoueurs.length; i++) {
+                        var node = document.createElement("LI");
+                        var textnode = document.createTextNode(lesJoueurs[i].login);
+                        node.appendChild(textnode);
+                        node.classList.add("j"+(i+1));
+                        document.getElementById("liste").appendChild(node);
+                    }
+                });
+                
+                socket.on('maj', function(){
+                    run();
+                });
+                
+                socket.on('maj joueur', function(data){
+                    lesJoueurs = data.j;
+                    draw();
+                });
+                
+                socket.on('maj murs', function(data){
+                    murs = data.w;
+                    lesBonus = data.b;
+                });
+                
+                socket.on('fin', function(data){
+                    
+                    document.getElementById("vainqueur").value = data.vainqueur;
+                    document.getElementById("joueur1").value = data.perdant[0];
+                    if (data.perdant[1] !== undefined){
+                        document.getElementById("joueur2").value = data.perdant[1];
+                    }
+                    if (data.perdant[2] !== undefined){
+                        document.getElementById("joueur3").value = data.perdant[2];
+                    }
+                    setTimeout(function(){document.getElementById("fin").submit();},1000);
+                });
+
+                //Fonctionnement du client
+                
+                function run () 
+                {
+                    input();
+                }
+                
+                function input() // on récupère une entrée et on l'envoie.
+                {
+                        $(document).keydown(function(k){
+                            switch(k.keyCode)
+                            {
+                                case 38 : inputList[haut] = 1;break; //Haut
+                                case 40 : inputList[bas] = 1;break;//Bas
+                                case 37 : inputList[gauche] = 1;break;//Gauche
+                                case 39 : inputList[droite] = 1;break;//Droite
+                                default : if(k.which == 32) {inputList[espace] = 1;}break;//Espace
+                            }
+                            k.preventDefault();
+                        });
+                        send();
+                }
+                
+                function inputClear()// on vide le tableau d'entrées.
+                {
+                    $(document).keyup(function(k){
+                            switch(k.keyCode)
+                            {
+                                case 38 : inputList[haut] = 0; break; //Haut
+                                case 40 : inputList[bas] = 0;break;//Bas
+                                case 37 : inputList[gauche] = 0; break;//Gauche
+                                case 39 : inputList[droite] = 0; break;//Droite
+                            }
+                        });
+                        inputList[espace] = 0;
+                }
+                
+                function send() // envoie de la mise à jour.
+                {
+                        socket.emit('maj',{idPartie : monNumPartie , numJ : monNumJoueur, input : inputList});
+                        inputClear();
+                }
+                
+                
+                
+                function collision(xObjet, yObjet, longueur, dX, dY) 
+                {
+                   if (0 > dX)
+                    {
+                        if ( Math.floor( (xObjet - longueur + dX) / tailleBloc)%2 ==  1 && Math.floor(yObjet / tailleBloc)%2 == 1 )
+                        {
+                            return gauche; //Collision à gauche
+                        }
+                    }
+                    //Déplacement à droite
+                    else if (0 < dX)
+                    {
+                        if ( Math.floor( (xObjet + longueur + dX) / tailleBloc)%2 ==  1 && Math.floor(yObjet / tailleBloc)%2 == 1 )
+                        {
+                            return droite; //Collision à droite
+                        }
+                    }
+                    //Déplacement vers le haut
+                    else if (0 > dY)
+                    {
+                        if ( Math.floor( xObjet / tailleBloc)%2 ==  1 && Math.floor( (yObjet - longueur + dY) / tailleBloc)%2 == 1 )
+                        {
+                            return haut; //Collision en haut
+                        }   
+                    }
+                    //Déplacement vers le bas
+                    else if (0 < dY)
+                    {
+                        if ( Math.floor( xObjet / tailleBloc)%2 ==  1 && Math.floor( (yObjet + longueur + dY) / tailleBloc)%2 == 1 )
+                        {
+                            return bas; //Collision en bas
+                        } 
+                    }
+                    return -1;
+                }
+    
+                //Fonction de dessin
+                
+                //Dessine les blocs infranchissable
+                function drawBlocs()
+                {
+                    context.shadowBlur=0;
+                    context.shadowColor='rgba(0,0,0,0)';
+                    //Géneration du contour.
+                    for (var x = 0; x < mapWidth + 2; x++)
+                    {
+                        context.drawImage(block, 0, 0, 46, 46,x * tailleBloc, 0, tailleBloc, tailleBloc);
+                        context.drawImage(block, 0, 0, 46, 46,x * tailleBloc, canvas.height - tailleBloc, tailleBloc, tailleBloc);
+                    }
+                    for (var y = 1; y < mapWidth + 1; y++)
+                    {
+                        context.drawImage(block, 0, 0, 46, 46,0, y * tailleBloc, tailleBloc, tailleBloc);
+                        context.drawImage(block, 0, 0, 46, 46,canvas.width - tailleBloc, tailleBloc * y, tailleBloc, tailleBloc);
+                    }
+                    context.fillStyle = '#ffcc99';
+                    // Pour générer tout les blocs en laissant un espace à gauche à droite en haut et en bas.
+                    for (var y = 1; y < mapHeight; y+= 2)
+                    {
+                        for (var x = 1; x < mapWidth; x+= 2)
+                        {
+                            
+                            context.fillRect(tailleBloc * x + tailleBloc,tailleBloc * y + tailleBloc,tailleBloc,tailleBloc);
+                            context.drawImage(block, 0, 0, 46, 46, tailleBloc * x + tailleBloc, tailleBloc * y + tailleBloc, tailleBloc, tailleBloc);
+                        }
+                    }
+                }
+                
+                //Pour les murs desctructibles
+                function drawWall()
+                {
+                    context.shadowBlur=0;
+                    context.shadowColor="white";
+                    for(var w = 0; w < (murs.length); w++)
+                    {
+                        if (murs[w][0] > -1 && murs[w][1] > -1 )
+                        {
+                          context.drawImage(mur, 0, 0, 46, 46,murs[w][0] * tailleBloc + tailleBloc , murs[w][1] * tailleBloc + tailleBloc, tailleBloc, tailleBloc);
+                        }
+                    }
+                    
+                }
+                
+                function drawBombes(joueur)
+                {
+                    for(var b = 0; b < joueur.bombes.length ; b++)
+                    {
+                        if (joueur.bombes[b][0] > -1 && joueur.bombes[b][1] > -1) {
+                           if( joueur.imgBombe[b] < 4){
+                               context.drawImage(bombe1, 0, 0, 46, 46, joueur.bombes[b][0] - tailleBloc/2 + tailleBloc, joueur.bombes[b][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
+                            }
+                            else {
+                                context.drawImage(bombe2, 0, 0, 46, 46, joueur.bombes[b][0] - tailleBloc/2 + tailleBloc, joueur.bombes[b][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
+                            }  
+                        }
+                    }
+                    
+                }
+                
+                function drawExplosion(joueur)
+                {
+                    for(var e = 0; e < joueur.exp.length ; e++)
+                    {
+                        if (joueur.exp[e][0] > -1 && joueur.exp[e][1] > -1) {
+                            
+                            //milieu
+                            if (joueur.imgExp[e] < 8)
+                                context.drawImage(exp, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
+                            else if (joueur.imgExp[e] < 16)
+                                context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
+                            else context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
+                            
+                            
+                            //droite
+
+                             if ( collision(joueur.exp[e][0], joueur.exp[e][1], 0, tailleBloc, 0 ) != droite && !(Math.floor((joueur.exp[e][0]+ tailleBloc)/tailleBloc)  >= mapWidth ) )
+                            {   
+                                for (var p = 0; p < joueur.pExp[e][droite]; p++)
+                                {
+                                    if (joueur.imgExp[e] < 8){
+                                        if (p == joueur.puissance -1)
+                                            context.drawImage(exp, 131, 0, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
+                                        else
+                                            context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
+                                    }else if (joueur.imgExp[e] < 16){
+                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                    }else{
+                                         context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                
+                                    }
+                                    
+                                }
+                               
+                            }
+                            
+                            
+                            //gauche
+                            if ( collision(joueur.exp[e][0] , joueur.exp[e][1], 0, -tailleBloc, 0 ) != gauche && !(Math.floor((joueur.exp[e][0]-tailleBloc)/tailleBloc) < 0) )
+                            {
+                                for (var p = 1; p < joueur.pExp[e][gauche] +1; p++)
+                                {
+                                    if (joueur.imgExp[e] < 8){
+                                        if (p == joueur.puissance)
+                                            context.drawImage(exp, 0, 55, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
+                                        else
+                                            context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
+                                    }else if (joueur.imgExp[e] < 16){
+                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                    }else{ 
+                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                    }
+                                }
+                            }
+
+                            //haut
+                            if ( collision(joueur.exp[e][0], joueur.exp[e][1], 0, 0, -tailleBloc ) != haut && !(Math.floor((joueur.exp[e][1]-tailleBloc)/tailleBloc) < 0) )
+                            {
+                                for (var p = 1; p < joueur.pExp[e][haut] +1; p++)
+                                { 
+                                    if (joueur.imgExp[e] < 8){
+                                        if (p == joueur.puissance)
+                                            context.drawImage(exp, 50, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        else
+                                            context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }else if (joueur.imgExp[e] < 16){
+                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }else 
+                                    {
+                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }
+                                        
+                                }
+                            }
+ 
+                            
+                            //bas
+                            if ( collision(joueur.exp[e][0], joueur.exp[e][1], 0, 0, tailleBloc  ) != bas && !(Math.floor((joueur.exp[e][1] + tailleBloc)/tailleBloc) >= mapHeight) )
+                            {
+                                for (var p = 0; p < joueur.pExp[e][bas]; p++)
+                                {
+        
+                                    if (joueur.imgExp[e] < 8){
+                                        if (p == joueur.puissance -1)
+                                            context.drawImage(exp, 49, 48, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        else
+                                            context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }else if (joueur.imgExp[e] < 16){
+                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }else 
+                                    {
+                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                }
+                
+                function drawJoueur(joueur)
+                {
+                    var couleur = "#0d0d0d"; // couleur noir
+                    switch (joueur.numJoueur)
+                    {
+                        case 0 : couleur = "#0039e6"; break;// couleur bleu
+                        case 1 : couleur = "#cc0000"; break;// couleur rouge
+                        case 2 : couleur = "#00cc00"; break;// couleur vert
+                        case 3 : couleur = "#ff8000"; break;// couleur orange
+                    }
+                    
+                    context.fillStyle = couleur;
+                    context.beginPath();
+                    
+                    context.arc(joueur.posX + tailleBloc, joueur.posY + tailleBloc, diametreBalle/2, 0, Math.PI*2);
+                    
+                    context.fill();
+                    var x = joueur.posX + tailleBloc;
+                    var y = joueur.posY + tailleBloc;
+                    //Partie images et animation
+                    
+                    //context.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
+                    //diametreBalle = 38
+                    switch (joueur.img)
+                    {
+                        case 0 : case 1 :
+                        case 2 : context.drawImage(perso[joueur.numJoueur], 10, 20, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de face
+                        
+                        case 3 : case 4 :
+                        case 5 : context.drawImage(perso[joueur.numJoueur], 192, 15, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile de face
+                        
+                        case 6 : case 7 :
+                        case 8 : context.drawImage(perso[joueur.numJoueur], 348, 5, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de face 
+                        
+                        case 9 : case 10 :
+                        case 11 : context.drawImage(perso[joueur.numJoueur], 20, 160, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil gauche
+                        
+                        case 12 : case 13 :
+                        case 14 : context.drawImage(perso[joueur.numJoueur], 192, 160, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile profil gauche
+                        
+                        case 15 : case 16 :
+                        case 17 : context.drawImage(perso[joueur.numJoueur], 348, 151, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil gauche
+                        
+                        case 18 : case 19 :
+                        case 20 : context.drawImage(perso[joueur.numJoueur], 25, 287, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil droite
+                        
+                        case 21 : case 22 :
+                        case 23 : context.drawImage(perso[joueur.numJoueur], 180, 295, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile profil droite
+                        
+                        case 24 : case 25 :
+                        case 26 : context.drawImage(perso[joueur.numJoueur], 360, 295, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil droite
+                        
+                        case 27 : case 28 :
+                        case 29 : context.drawImage(perso[joueur.numJoueur], 5, 430, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de dos
+                        
+                        case 30 : case 31 :
+                        case 32 : context.drawImage(perso[joueur.numJoueur], 190, 428, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile de dos
+                        
+                        case 33 : case 34 :
+                        case 35 : context.drawImage(perso[joueur.numJoueur], 355, 421, 80, 120, x - 20, y - 40, 40, 60);  break;//Cours de dos
+                    }
+                }
+                
+                function drawBonus()
+                {
+                    for(var b = 0; b < lesBonus.length ; b++)
+                    {
+                        if (lesBonus[b].id > -1 && lesBonus[b].id < maxPower + 1 )
+                        {
+                            switch (lesBonus[b].id)
+                            {
+                                case bombUp :context.drawImage(imgBonus[bombUp], 0, 0, 46, 46, lesBonus[b].posX * tailleBloc + tailleBloc , lesBonus[b].posY * tailleBloc + tailleBloc, tailleBloc, tailleBloc); break;// jaune
+                                case powerUp : context.drawImage(imgBonus[powerUp], 0, 0, 46, 46, lesBonus[b].posX * tailleBloc + tailleBloc , lesBonus[b].posY * tailleBloc + tailleBloc, tailleBloc, tailleBloc); break;// orange
+                                case speedUp : context.drawImage(imgBonus[speedUp], 0, 0, 46, 46, lesBonus[b].posX * tailleBloc + tailleBloc , lesBonus[b].posY * tailleBloc + tailleBloc, tailleBloc, tailleBloc); break;// bleu
+                                case maxPower : context.drawImage(imgBonus[maxPower], 0, 0, 46, 46, lesBonus[b].posX * tailleBloc + tailleBloc , lesBonus[b].posY * tailleBloc + tailleBloc, tailleBloc, tailleBloc); break;// rouge
+                            }
+
+                        }
+                    }
+                }
+                
+                function draw()
+                {
+                    context.clearRect(0, 0, canvas.width, canvas.height);// on vide le canvas pour déssiné de nouveau dessus.
+                    
+                    //ajouté des bordures de taille = tailleBloc et modifié le 0 dans la logique du jeu.
+                    
+                    //Tracé des murs
+                    drawWall();
+                    
+                    //Tracé des bonus
+                    drawBonus();
+                    
+                    for (var j = 0; j < lesJoueurs.length; j++)
+                    {
+                        //Tracé des explosions
+                        drawExplosion(lesJoueurs[j]);
+                        
+                        //Tracé des bombes
+                        drawBombes(lesJoueurs[j]);
+                    }
+                    
+                    //Tracé des bloc
+                    drawBlocs();
+                    
+                    for (var j = 0; j < lesJoueurs.length; j++)
+                    {
+                        //Tracé des joueurs
+                        if (lesJoueurs[j].vivant == true)drawJoueur(lesJoueurs[j]);
+                    }
+                    
+                }
+                
+                function loadImg()
+                {
+                    //sprite.src = 'img/Sprite_test.png';// chargement des sprites pour l'animation.
+                    perso[0].src = 'img/perso1.png';
+                    perso[1].src = 'img/perso2.png';
+                    perso[2].src = 'img/perso3.png';
+                    perso[3].src = 'img/perso4.png';
+                    
+                    bombe1.src = 'img/bombe1.png';
+                    bombe2.src = 'img/bombe2.png';
+                    
+                    exp.src = 'img/exp.png';
+                    exp2.src = 'img/exp2.png';
+                    exp3.src = 'img/exp3.png';
+                    
+                    block.src = 'img/block.png';
+                    mur.src = 'img/mur.png';
+                    
+                    imgBonus[bombUp].src = 'img/bombUp.png';
+                    imgBonus[powerUp].src = 'img/powerUp.png';
+                    imgBonus[speedUp].src = 'img/speedUp.png';
+                    imgBonus[maxPower].src = 'img/maxPower.png';
+                    
+                }
+            };
+        </script>
+    <script>   //  MUSIQUE JEU 
+         function son(x) { // fonction qui genere les effets sonors 
+        var audioElement = document.createElement('audio');
+        audioElement.setAttribute('src', x);
+        audioElement.setAttribute('autoplay', 'autoplay');
+        audioElement.load()
+        $.get();
+        audioElement.addEventListener("load", function() {
+        audioElement.play();
+        }, true);};
+        son('bass.mp3');
+    </script>
+    
+    </body>
+
+</html>
