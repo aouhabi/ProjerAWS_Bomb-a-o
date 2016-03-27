@@ -10,7 +10,8 @@ Tous les fichiers necessaire à l'execution sont dans :  bomber
 en suite on install les dependences 
 
         npm install
-et on lance le serveur mysql         
+et on lance le serveur mysql  
+
         mysql-ctl start 
 et en fin le seveur de notre appli 
 ## app.js
