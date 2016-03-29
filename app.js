@@ -10,6 +10,7 @@ var passwordHash = require('password-hash');
 var app = express();
 var twig = require("twig");
 var session = require('express-session');
+var md5 = require('md5');
 var escapee=require("html-escape");
 
 
@@ -459,11 +460,11 @@ io.sockets.on('connection', function(client) {    // ouverture socket global
                     listeParties[idP].etatMaj[nJ] = 1;// on le note comme mis à jour.
                     listeParties[idP].cptMaj++;
                 }
-                if(listeParties[idP].cptMaj == listeParties[idP].joueurPret){
+                if(listeParties[idP].cptMaj >= listeParties[idP].joueurPret){
                     listeParties[idP].dt = 1000/15/(Date.now() - listeParties[idP].lastTime);//1000/15 onconsidere que toute les reponses doivent arriver en 66ms 
                     if (listeParties[idP].dt > 2) listeParties[idP].dt = 2;// on limite la variation.
                     if (listeParties[idP].dt < 0.50) listeParties[idP].dt = 0.50;
-                    for (var j = 0 ; j < listeParties[idP].joueurPret; j++)
+                    for (var j = 0 ; j < listeParties[idP].joueurs.length; j++)
                     {
                         update(idP, j);
                     }
@@ -483,13 +484,12 @@ io.sockets.on('connection', function(client) {    // ouverture socket global
                             vainqueur = listeParties[idP].joueurs[m];// si la partie n'est pas finie cette variable est sans importance.
                         }
                     }
-                    if (nbMort == listeParties[idP].joueurs.length - 1 )
+                    if (nbMort >= listeParties[idP].joueurs.length - 1 )
                     {
                         //Si la partie est finie on enregistre le vainqueur dans la base de données et on envoie le signal de fin de partie.
                         db.query('UPDATE user SET partie_gagner =partie_gagner+1  WHERE id = ?', vainqueur.id) ;   
                         sendFin(idP, vainqueur, mort);
                         fin = true;
-                         
                     }
                     if (listeParties[idP].doitEnvoyerMurs == true)
                     {
@@ -624,7 +624,7 @@ function sendMurs(idP) {
  * l'event est 'fin'.
  */
 function sendFin(idP, vainqueur, mort){
-    if (idP !== undefined && listeParties[idP] !== undefined){
+    if (idP !== undefined /*&& listeParties[idP] !== undefined*/){
         for (var i = 0; i < listeParties[idP].socketJoueurs.length; i++) {
             if (listeParties[idP].socketJoueurs[i] != null)
                 listeParties[idP].socketJoueurs[i].emit('fin',{vainqueur : vainqueur.login, perdant : mort});
@@ -816,6 +816,7 @@ function joueur(numJoueur, c) {
    this.nbBombes = 0;//son nombre de bombes posés actuellement.
    this.maxBombes = 1;// le maximum de bombes qu'il peut poser actuellement.
    
+   //Pour l'animation des bombes
    this.imgBombe =  [
         [0],
         [0],
@@ -841,7 +842,7 @@ function joueur(numJoueur, c) {
         [this.puissance, this.puissance, this.puissance, this.puissance],
         [this.puissance, this.puissance, this.puissance, this.puissance]
    ];
-   
+   //Pour l'animation des explosions.
    this.imgExp =  [
         [0],
         [0],
@@ -1299,7 +1300,7 @@ function detruit(ne, idP, joueur) {
             else if (dHaut == false && Math.floor(listeParties[idP].joueurs[j].posX / tailleBloc) == Math.floor(joueur.exp[ne][0]/tailleBloc) && Math.floor(listeParties[idP].joueurs[j].posY / tailleBloc) == Math.floor( (joueur.exp[ne][1] - i * tailleBloc )/tailleBloc) ) {
                 listeParties[idP].joueurs[j].vivant = false;
             }
-            else if (dHaut == false && Math.floor(listeParties[idP].joueurs[j].posX / tailleBloc) == Math.floor(joueur.exp[ne][0]/tailleBloc) && Math.floor(listeParties[idP].joueurs[j].posY / tailleBloc) == Math.floor( (joueur.exp[ne][1] + i * tailleBloc )/tailleBloc) ) {
+            else if (dBas == false && Math.floor(listeParties[idP].joueurs[j].posX / tailleBloc) == Math.floor(joueur.exp[ne][0]/tailleBloc) && Math.floor(listeParties[idP].joueurs[j].posY / tailleBloc) == Math.floor( (joueur.exp[ne][1] + i * tailleBloc )/tailleBloc) ) {
                 listeParties[idP].joueurs[j].vivant = false;
             }
        }
@@ -1437,101 +1438,42 @@ function animate(joueur,dX, dY)
     if (dX < 0)//gauche
     {
         //Methode pour prolonger l'animation.
-            if (joueur.img == 9)
-                joueur.img = 10;
-            else if (joueur.img == 10)
-                joueur.img = 11;
-            else if (joueur.img == 11)
-                joueur.img = 12;
-            else if (joueur.img == 12)
-                joueur.img = 13;
-            else if (joueur.img == 13)
-                joueur.img = 14;
-            else if (joueur.img == 14)
-                joueur.img = 15;
-            else if (joueur.img == 15)
-                joueur.img = 16;
-            else if (joueur.img == 16)
-                joueur.img = 17;
-            else joueur.img = 9;
+        if (20 < joueur.img && joueur.img < 42)
+            joueur.img++;
+        else joueur.img = 21;
     }
     else if (dX > 0 ) // Droite
     {
-             if (joueur.img == 18)
-                joueur.img = 19;
-            else if (joueur.img == 19)
-                joueur.img = 20;
-            else if (joueur.img == 20)
-                joueur.img = 21;
-            else if (joueur.img == 21)
-                joueur.img = 22;
-            else if (joueur.img == 22)
-                joueur.img = 23;
-            else if (joueur.img == 23)
-                joueur.img = 24;
-            else if (joueur.img == 24)
-                joueur.img = 25;
-            else if (joueur.img == 25)
-                joueur.img = 26;
-            else joueur.img = 18;
+        if (41 < joueur.img && joueur.img < 63)
+            joueur.img++;
+        else joueur.img = 42;
     }
     else if (dY < 0) //Haut uniquement
     {
-         if (joueur.img == 27)
-                joueur.img = 28;
-            else if (joueur.img == 28)
-                joueur.img = 29;
-            else if (joueur.img == 29)
-                joueur.img = 30;
-            else if (joueur.img == 30)
-                joueur.img = 21;
-            else if (joueur.img == 31)
-                joueur.img = 32;
-            else if (joueur.img == 32)
-                joueur.img = 33;
-            else if (joueur.img == 33)
-                joueur.img = 34;
-            else if (joueur.img == 34)
-                joueur.img = 35;
-            else joueur.img = 27;
+         if (62 < joueur.img && joueur.img < 84)
+            joueur.img++;
+        else joueur.img = 63;
     }
     else if (dY > 0) //Bas uniquement
     {
-        if (joueur.img == 0)
-                joueur.img = 1;
-            else if (joueur.img == 1)
-                joueur.img = 2;
-            else if (joueur.img == 2)
-                joueur.img = 3;
-            else if (joueur.img == 3)
-                joueur.img = 4;
-            else if (joueur.img == 4)
-                joueur.img = 5;
-            else if (joueur.img == 5)
-                joueur.img = 6;
-            else if (joueur.img == 6)
-                joueur.img = 7;
-            else if (joueur.img == 7)
-                joueur.img = 8;
-            else joueur.img = 0;
+        if (joueur.img < 21)
+            joueur.img++;
+        else joueur.img = 0;
     }
     else //Immobile
     {
-        if (-1 < joueur.img && joueur.img < 9 ) joueur.img = 5;
-        if (8 < joueur.img && joueur.img < 18) joueur.img = 14;
-        if (17 < joueur.img && joueur.img < 27) joueur.img = 23;
-        if (26 < joueur.img && joueur.img < 36) joueur.img = 32;
+        if (joueur.img < 21 ) joueur.img = 13;
+        else if (joueur.img < 42) joueur.img = 34;
+        else if (joueur.img < 63) joueur.img = 55;
+        else if (joueur.img < 84) joueur.img = 76;
     }
     
+    //Pour l'animation des bombes
     for (var b = 0 ; b < joueur.bombes.length; b++)
     {
         if (joueur.bombes[b][0] > -1)
         {
-            if (joueur.imgBombe[b] < 4)
-            {
-                joueur.imgBombe[b]++;
-            }
-            else if (joueur.imgBombe[b] > 8)
+            if (joueur.imgBombe[b] > 8)
             {
                 joueur.imgBombe[b] = 0;
             }
@@ -1540,15 +1482,12 @@ function animate(joueur,dX, dY)
         else joueur.imgBombe[b] = 0;
     }
     
+    //Pour l'animation des explosions
     for (var e = 0 ; e < joueur.exp.length; e++)
     {
         if (joueur.exp[e][0] > -1)
         {
-            if (joueur.imgExp[e] < 3)
-            {
-                joueur.imgExp[e]++;
-            }
-            else if (joueur.imgExp[e] > 100)
+            if (joueur.imgExp[e] > 100)
             {
                 joueur.imgExp[e] = 0;
             }
