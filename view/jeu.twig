@@ -196,7 +196,6 @@
                 });
                 
                 socket.on('fin', function(data){
-                    
                     document.getElementById("vainqueur").value = data.vainqueur;
                     document.getElementById("joueur1").value = data.perdant[0];
                     if (data.perdant[1] !== undefined){
@@ -340,7 +339,7 @@
                     for(var b = 0; b < joueur.bombes.length ; b++)
                     {
                         if (joueur.bombes[b][0] > -1 && joueur.bombes[b][1] > -1) {
-                           if( joueur.imgBombe[b] < 4){
+                           if( joueur.imgBombe[b] < 4){ //Animation des bombes
                                context.drawImage(bombe1, 0, 0, 46, 46, joueur.bombes[b][0] - tailleBloc/2 + tailleBloc, joueur.bombes[b][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
                             }
                             else {
@@ -357,30 +356,34 @@
                     {
                         if (joueur.exp[e][0] > -1 && joueur.exp[e][1] > -1) {
                             
-                            //milieu
-                            if (joueur.imgExp[e] < 8)
+                            //milieu, le coeur de l'explosion.
+                            if (joueur.imgExp[e] < 6)
                                 context.drawImage(exp, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
-                            else if (joueur.imgExp[e] < 16)
+                            else if (joueur.imgExp[e] < 10)
                                 context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
                             else context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 + tailleBloc, tailleBloc, tailleBloc);
                             
                             
                             //droite
-
+                            //Si l'explosion n'es pas collé au bord ou a un bloc indestructible ( si la bombe augmente de puissance elle deborde).
                              if ( collision(joueur.exp[e][0], joueur.exp[e][1], 0, tailleBloc, 0 ) != droite && !(Math.floor((joueur.exp[e][0]+ tailleBloc)/tailleBloc)  >= mapWidth ) )
-                            {   
+                            {
+                                //On dessine l'explosion case par case.
                                 for (var p = 0; p < joueur.pExp[e][droite]; p++)
                                 {
-                                    if (joueur.imgExp[e] < 8){
-                                        if (p == joueur.puissance -1)
-                                            context.drawImage(exp, 131, 0, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
-                                        else
-                                            context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
-                                    }else if (joueur.imgExp[e] < 16){
-                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
-                                    }else{
-                                         context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
-                                
+                                    if (Math.floor((joueur.exp[e][0]+ tailleBloc)/tailleBloc) + p < mapWidth ){
+                                        //Pour l'animation et le choix de l'image.
+                                        if (joueur.imgExp[e] < 6){
+                                            if (p == joueur.puissance -1)//Le bout de l'explosion.
+                                                context.drawImage(exp, 131, 0, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
+                                            else
+                                                context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
+                                        }else if (joueur.imgExp[e] < 10){
+                                            context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                        }else{
+                                             context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] + tailleBloc/2 + tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                    
+                                        }
                                     }
                                     
                                 }
@@ -393,15 +396,17 @@
                             {
                                 for (var p = 1; p < joueur.pExp[e][gauche] +1; p++)
                                 {
-                                    if (joueur.imgExp[e] < 8){
-                                        if (p == joueur.puissance)
-                                            context.drawImage(exp, 0, 55, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
-                                        else
-                                            context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
-                                    }else if (joueur.imgExp[e] < 16){
-                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
-                                    }else{ 
-                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                    if (!(Math.floor((joueur.exp[e][0]-tailleBloc)/tailleBloc) - p + 1 < 0) ){
+                                        if (joueur.imgExp[e] < 6){
+                                            if (p == joueur.puissance)
+                                                context.drawImage(exp, 0, 55, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc, tailleBloc, tailleBloc - 9);
+                                            else
+                                                context.drawImage(exp, 92, 49, 46, 38, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc - 9);
+                                        }else if (joueur.imgExp[e] < 10){
+                                            context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                        }else{ 
+                                            context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - tailleBloc/2 - tailleBloc * p + tailleBloc, joueur.exp[e][1] - diametreBalle/2 + tailleBloc , tailleBloc, tailleBloc);
+                                        }
                                     }
                                 }
                             }
@@ -410,19 +415,20 @@
                             if ( collision(joueur.exp[e][0], joueur.exp[e][1], 0, 0, -tailleBloc ) != haut && !(Math.floor((joueur.exp[e][1]-tailleBloc)/tailleBloc) < 0) )
                             {
                                 for (var p = 1; p < joueur.pExp[e][haut] +1; p++)
-                                { 
-                                    if (joueur.imgExp[e] < 8){
-                                        if (p == joueur.puissance)
-                                            context.drawImage(exp, 50, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                        else
-                                            context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                    }else if (joueur.imgExp[e] < 16){
-                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                    }else 
-                                    {
-                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                    }
-                                        
+                                {
+                                    if (!(Math.floor((joueur.exp[e][1]-tailleBloc)/tailleBloc) - p + 1 < 0) ) {
+                                        if (joueur.imgExp[e] < 6){
+                                            if (p == joueur.puissance)
+                                                context.drawImage(exp, 50, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                            else
+                                                context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }else if (joueur.imgExp[e] < 10){
+                                            context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }else 
+                                        {
+                                            context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] - tailleBloc/2 - tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }
+                                    } 
                                 }
                             }
  
@@ -432,17 +438,18 @@
                             {
                                 for (var p = 0; p < joueur.pExp[e][bas]; p++)
                                 {
-        
-                                    if (joueur.imgExp[e] < 8){
-                                        if (p == joueur.puissance -1)
-                                            context.drawImage(exp, 49, 48, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                        else
-                                            context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                    }else if (joueur.imgExp[e] < 16){
-                                        context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
-                                    }else 
-                                    {
-                                        context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                    if ( Math.floor((joueur.exp[e][1] + tailleBloc)/tailleBloc) + p < mapHeight){
+                                        if (joueur.imgExp[e] < 6){
+                                            if (p == joueur.puissance -1)
+                                                context.drawImage(exp, 49, 48, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                            else
+                                                context.drawImage(exp, 90, 0, 38, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }else if (joueur.imgExp[e] < 10){
+                                            context.drawImage(exp2, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }else 
+                                        {
+                                            context.drawImage(exp3, 0, 0, 46, 46, joueur.exp[e][0] - diametreBalle/2 + tailleBloc, joueur.exp[e][1] + tailleBloc/2 + tailleBloc * p + tailleBloc,(tailleBloc - 9),(tailleBloc));
+                                        }
                                     }
                                 }
                             }
@@ -474,44 +481,30 @@
                     
                     //context.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh)
                     //diametreBalle = 38
-                    switch (joueur.img)
-                    {
-                        case 0 : case 1 :
-                        case 2 : context.drawImage(perso[joueur.numJoueur], 10, 20, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de face
-                        
-                        case 3 : case 4 :
-                        case 5 : context.drawImage(perso[joueur.numJoueur], 192, 15, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile de face
-                        
-                        case 6 : case 7 :
-                        case 8 : context.drawImage(perso[joueur.numJoueur], 348, 5, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de face 
-                        
-                        case 9 : case 10 :
-                        case 11 : context.drawImage(perso[joueur.numJoueur], 20, 160, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil gauche
-                        
-                        case 12 : case 13 :
-                        case 14 : context.drawImage(perso[joueur.numJoueur], 192, 160, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile profil gauche
-                        
-                        case 15 : case 16 :
-                        case 17 : context.drawImage(perso[joueur.numJoueur], 348, 151, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil gauche
-                        
-                        case 18 : case 19 :
-                        case 20 : context.drawImage(perso[joueur.numJoueur], 25, 287, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil droite
-                        
-                        case 21 : case 22 :
-                        case 23 : context.drawImage(perso[joueur.numJoueur], 180, 295, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile profil droite
-                        
-                        case 24 : case 25 :
-                        case 26 : context.drawImage(perso[joueur.numJoueur], 360, 295, 80, 120, x - 20, y - 40, 40, 60);  break;//Court profil droite
-                        
-                        case 27 : case 28 :
-                        case 29 : context.drawImage(perso[joueur.numJoueur], 5, 430, 80, 120, x - 20, y - 40, 40, 60);  break;//Court de dos
-                        
-                        case 30 : case 31 :
-                        case 32 : context.drawImage(perso[joueur.numJoueur], 190, 428, 80, 120, x - 20, y - 40, 40, 60);  break;//Immobile de dos
-                        
-                        case 33 : case 34 :
-                        case 35 : context.drawImage(perso[joueur.numJoueur], 355, 421, 80, 120, x - 20, y - 40, 40, 60);  break;//Cours de dos
-                    }
+                    if (joueur.img < 7)
+                        context.drawImage(perso[joueur.numJoueur], 10, 20, 80, 120, x - 20, y - 40, 40, 60);//Court de face
+                    else if ( joueur.img < 14)
+                        context.drawImage(perso[joueur.numJoueur], 192, 15, 80, 120, x - 20, y - 40, 40, 60);//Immobile de face
+                    else if ( joueur.img < 21)
+                        context.drawImage(perso[joueur.numJoueur], 348, 5, 80, 120, x - 20, y - 40, 40, 60);//Court de face 
+                    else if ( joueur.img < 28)
+                        context.drawImage(perso[joueur.numJoueur], 20, 160, 80, 120, x - 20, y - 40, 40, 60);//Court profil gauche
+                    else if ( joueur.img < 35)
+                        context.drawImage(perso[joueur.numJoueur], 192, 160, 80, 120, x - 20, y - 40, 40, 60);//Immobile profil gauche
+                    else if ( joueur.img < 42)
+                        context.drawImage(perso[joueur.numJoueur], 348, 151, 80, 120, x - 20, y - 40, 40, 60);//Court profil gauche
+                    else if ( joueur.img < 49)
+                        context.drawImage(perso[joueur.numJoueur], 25, 287, 80, 120, x - 20, y - 40, 40, 60);//Court profil droite
+                    else if ( joueur.img < 56)
+                        context.drawImage(perso[joueur.numJoueur], 180, 295, 80, 120, x - 20, y - 40, 40, 60);//Immobile profil droite
+                    else if ( joueur.img < 63)
+                        context.drawImage(perso[joueur.numJoueur], 360, 295, 80, 120, x - 20, y - 40, 40, 60);//Court profil droite
+                    else if ( joueur.img < 70)
+                        context.drawImage(perso[joueur.numJoueur], 5, 430, 80, 120, x - 20, y - 40, 40, 60);//Court de dos
+                    else if ( joueur.img < 77)
+                        context.drawImage(perso[joueur.numJoueur], 190, 428, 80, 120, x - 20, y - 40, 40, 60);//Immobile de dos
+                    else if ( joueur.img < 84)
+                        context.drawImage(perso[joueur.numJoueur], 355, 421, 80, 120, x - 20, y - 40, 40, 60);//Cours de dos
                 }
                 
                 function drawBonus()
@@ -535,8 +528,6 @@
                 function draw()
                 {
                     context.clearRect(0, 0, canvas.width, canvas.height);// on vide le canvas pour déssiné de nouveau dessus.
-                    
-                    //ajouté des bordures de taille = tailleBloc et modifié le 0 dans la logique du jeu.
                     
                     //Tracé des murs
                     drawWall();
@@ -590,17 +581,27 @@
                 }
             };
         </script>
-    <script>   //  MUSIQUE JEU 
-         function son(x) { // fonction qui genere les effets sonors 
-        var audioElement = document.createElement('audio');
-        audioElement.setAttribute('src', x);
-        audioElement.setAttribute('autoplay', 'autoplay');
-        audioElement.load()
-        $.get();
-        audioElement.addEventListener("load", function() {
-        audioElement.play();
-        }, true);};
-        son('bass.mp3');
+    <script>   //  MUSIQUE JEU
+        
+        var musics = Array(4);
+        musics[0] = 'music/music0.mp3';
+        musics[1] = 'music/music1.mp3';
+        musics[2] = 'music/music2.mp3';
+        musics[3] = 'music/music3.mp3';
+        function son(x) { // fonction qui genere les effets sonors 
+            var audioElement = document.createElement('audio');
+            audioElement.setAttribute('src', x);
+            audioElement.setAttribute('autoplay', 'autoplay');
+            audioElement.load()
+            $.get();
+            audioElement.addEventListener("load", function() {
+            audioElement.play();
+            }, true);
+            
+        };
+        var m = Math.floor(Math.random() * 4);
+        son(musics[m]);
+        
     </script>
     
     </body>
